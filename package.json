@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "node dist/server-http.js"
     "dev": "tsx src/server.ts",
     "lint": "eslint . --ext .ts",
     "setup-auth": "tsx scripts/setup-auth.ts"
