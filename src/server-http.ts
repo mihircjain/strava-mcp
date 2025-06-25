@@ -1,6 +1,5 @@
 import express from "express";
-import { McpServer } from "@modelcontextprotocol/sdk/server";
-import { createExpressMiddleware } from "@modelcontextprotocol/sdk/server";
+import { McpServer, createExpressMiddleware } from "@modelcontextprotocol/sdk/server";
 import * as dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
