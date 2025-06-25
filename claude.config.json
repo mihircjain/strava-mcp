@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "strava-mcp-local": {
+      "command": "node",
+      "args": [
+        "/Users/mihjain/Desktop/strava-mcp/dist/server.js"
+      ]
+    }
+  }
+}
+
+
