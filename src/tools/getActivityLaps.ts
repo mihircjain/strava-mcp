@@ -1,6 +1,24 @@
 import { z } from "zod";
 import { getActivityLaps as getActivityLapsClient } from "../stravaClient.js";
-import { formatDuration } from "../server.js"; // Import helper
+
+// Local helper function to avoid circular imports
+function formatDuration(seconds: number): string {
+    if (isNaN(seconds) || seconds < 0) {
+        return 'N/A';
+    }
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+
+    const parts: string[] = [];
+    if (hours > 0) {
+        parts.push(hours.toString().padStart(2, '0'));
+    }
+    parts.push(minutes.toString().padStart(2, '0'));
+    parts.push(secs.toString().padStart(2, '0'));
+
+    return parts.join(':');
+}
 
 const name = "get-activity-laps";
 

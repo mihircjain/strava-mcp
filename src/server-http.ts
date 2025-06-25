@@ -1,5 +1,4 @@
 import express from "express";
-import { McpServer, createExpressMiddleware } from "@modelcontextprotocol/sdk/server";
 import * as dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -32,36 +31,73 @@ dotenv.config({ path: path.join(__dirname, "..", ".env") });
 const app = express();
 app.use(express.json());
 
-const server = new McpServer({
-  name: "Strava MCP Server (HTTP)",
-  version: "1.0.0"
+// Create tool registry for HTTP endpoints
+const tools: { [key: string]: any } = {
+  'get-athlete-profile': getAthleteProfile,
+  'get-athlete-stats': getAthleteStatsTool,
+  'get-activity-details': getActivityDetailsTool,
+  'get-recent-activities': getRecentActivities,
+  'list-athlete-clubs': listAthleteClubs,
+  'list-starred-segments': listStarredSegments,
+  'get-segment': getSegmentTool,
+  'explore-segments': exploreSegments,
+  'star-segment': starSegment,
+  'get-segment-effort': getSegmentEffortTool,
+  'list-segment-efforts': listSegmentEffortsTool,
+  'list-athlete-routes': listAthleteRoutesTool,
+  'get-route': getRouteTool,
+  'export-route-gpx': exportRouteGpx,
+  'export-route-tcx': exportRouteTcx,
+  'get-activity-streams': getActivityStreamsTool,
+  'get-activity-laps': getActivityLapsTool,
+  'get-athlete-zones': getAthleteZonesTool,
+};
+
+// Health check endpoint
+app.get('/health', (_, res) => {
+  res.json({ status: 'ok', service: 'strava-mcp-server' });
 });
 
-// Register tools (same as your server.ts)
-server.tool(getAthleteProfile.name, getAthleteProfile.description, {}, getAthleteProfile.execute);
-server.tool(getAthleteStatsTool.name, getAthleteStatsTool.description, getAthleteStatsTool.inputSchema?.shape ?? {}, getAthleteStatsTool.execute);
-server.tool(getActivityDetailsTool.name, getActivityDetailsTool.description, getActivityDetailsTool.inputSchema?.shape ?? {}, getActivityDetailsTool.execute);
-server.tool(getRecentActivities.name, getRecentActivities.description, getRecentActivities.inputSchema?.shape ?? {}, getRecentActivities.execute);
-server.tool(listAthleteClubs.name, listAthleteClubs.description, {}, listAthleteClubs.execute);
-server.tool(listStarredSegments.name, listStarredSegments.description, {}, listStarredSegments.execute);
-server.tool(getSegmentTool.name, getSegmentTool.description, getSegmentTool.inputSchema?.shape ?? {}, getSegmentTool.execute);
-server.tool(exploreSegments.name, exploreSegments.description, exploreSegments.inputSchema?.shape ?? {}, exploreSegments.execute);
-server.tool(starSegment.name, starSegment.description, starSegment.inputSchema?.shape ?? {}, starSegment.execute);
-server.tool(getSegmentEffortTool.name, getSegmentEffortTool.description, getSegmentEffortTool.inputSchema?.shape ?? {}, getSegmentEffortTool.execute);
-server.tool(listSegmentEffortsTool.name, listSegmentEffortsTool.description, listSegmentEffortsTool.inputSchema?.shape ?? {}, listSegmentEffortsTool.execute);
-server.tool(listAthleteRoutesTool.name, listAthleteRoutesTool.description, listAthleteRoutesTool.inputSchema?.shape ?? {}, listAthleteRoutesTool.execute);
-server.tool(getRouteTool.name, getRouteTool.description, getRouteTool.inputSchema?.shape ?? {}, getRouteTool.execute);
-server.tool(exportRouteGpx.name, exportRouteGpx.description, exportRouteGpx.inputSchema?.shape ?? {}, exportRouteGpx.execute);
-server.tool(exportRouteTcx.name, exportRouteTcx.description, exportRouteTcx.inputSchema?.shape ?? {}, exportRouteTcx.execute);
-server.tool(getActivityStreamsTool.name, getActivityStreamsTool.description, getActivityStreamsTool.inputSchema?.shape ?? {}, getActivityStreamsTool.execute);
-server.tool(getActivityLapsTool.name, getActivityLapsTool.description, getActivityLapsTool.inputSchema?.shape ?? {}, getActivityLapsTool.execute);
-server.tool(getAthleteZonesTool.name, getAthleteZonesTool.description, getAthleteZonesTool.inputSchema?.shape ?? {}, getAthleteZonesTool.execute);
+// List all available tools
+app.get('/api/tools', (_, res) => {
+  const toolList = Object.keys(tools).map(name => ({
+    name,
+    description: tools[name].description
+  }));
+  res.json({ tools: toolList });
+});
 
-// Mount the MCP tools under /api
-app.use("/api", createExpressMiddleware(server));
+// Execute a tool
+app.post('/api/tools/:toolName', async (req: any, res: any) => {
+  const { toolName } = req.params;
+  const tool = tools[toolName];
+  
+  if (!tool) {
+    return res.status(404).json({ 
+      error: `Tool '${toolName}' not found`,
+      availableTools: Object.keys(tools)
+    });
+  }
+
+  try {
+    console.error(`Executing tool: ${toolName} with params:`, req.body);
+    const result = await tool.execute(req.body || {});
+    res.json(result);
+  } catch (error: any) {
+    console.error(`Error executing tool ${toolName}:`, error);
+    res.status(500).json({ 
+      error: 'Tool execution failed',
+      message: error.message || 'Unknown error'
+    });
+  }
+});
 
 // Start the HTTP server
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
-  console.error(`✅ Strava MCP HTTP server running on port ${PORT}`);
+  console.log(`✅ Strava MCP HTTP server running on port ${PORT}`);
+  console.log(`📋 Available endpoints:`);
+  console.log(`   GET  /health - Health check`);
+  console.log(`   GET  /api/tools - List all tools`);
+  console.log(`   POST /api/tools/:toolName - Execute a tool`);
 });
