@@ -29,12 +29,12 @@ const inputSchema = z.object({});
 type GetAthleteZonesInput = z.infer<typeof inputSchema>;
 
 // Helper to format a single zone range
-function formatZoneRange(zone: { min: number; max?: number }): string {
+function formatZoneRange(zone: any): string {
     return zone.max ? `${zone.min} - ${zone.max}` : `${zone.min}+`;
 }
 
 // Helper to format distribution buckets
-function formatDistribution(buckets: { max: number; min: number; time: number }[] | undefined): string {
+function formatDistribution(buckets: any[] | undefined): string {
     if (!buckets || buckets.length === 0) return "  Distribution data not available.";
     
     return buckets.map(bucket => 

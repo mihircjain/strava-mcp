@@ -17,7 +17,6 @@
     /* Module resolution */
     "moduleResolution": "Node",
     "module": "ESNext",
-    "types": ["node"],
 
     /* Output */
     "outDir": "dist",
